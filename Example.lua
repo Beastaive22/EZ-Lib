@@ -5,7 +5,7 @@
 ----------------------------------------------------------------
 -- LOAD (pick one method)
 ----------------------------------------------------------------
-local repo = "https://raw.githubusercontent.com/Beastaive22/EZ-Hub/refs/heads/main/"
+local repo = "https://raw.githubusercontent.com/Beastaive22/EZ-Lib/refs/heads/main/"
 local EZ = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
