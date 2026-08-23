@@ -1808,8 +1808,8 @@ addStroke(windowCloseBtn, theme.Border, 1, 0.35)
     local collapseBtn = create("TextButton", {
         Size = UDim2.new(0, 24, 0, 24),
         Position = UDim2.new(1, -96, 0.5, -12),
-        BackgroundColor3 = theme.Info,
-        BackgroundTransparency = 0.6,
+        BackgroundColor3 = theme.Panel,
+        BackgroundTransparency = 0.15,
         Text = "",
         BorderSizePixel = 0,
         ZIndex = 7,
@@ -1826,16 +1826,23 @@ addStroke(windowCloseBtn, theme.Border, 1, 0.35)
         ZIndex = 8,
         Parent = collapseBtn,
     })
-    addCorner(collapseBtn, 6)
+    addCorner(collapseBtn, 8)
+    addStroke(collapseBtn, theme.Border, 1, 0.35)
     collapseBtn.Visible = opts.SidebarToggle ~= false
     trackConnection(collapseBtn.MouseButton1Click, function()
         window:ToggleSidebar()
     end)
     trackConnection(collapseBtn.MouseEnter, function()
-        tween(collapseBtn, {BackgroundTransparency = 0.2}, 0.15)
+        tween(collapseBtn, {
+    BackgroundColor3 = theme.Accent,
+    BackgroundTransparency = 0
+}, 0.15)
     end)
     trackConnection(collapseBtn.MouseLeave, function()
-        tween(collapseBtn, {BackgroundTransparency = 0.6}, 0.15)
+        tween(collapseBtn, {
+    BackgroundColor3 = theme.Panel,
+    BackgroundTransparency = 0.15
+}, 0.15)
     end)
 
     -- ~~--------
