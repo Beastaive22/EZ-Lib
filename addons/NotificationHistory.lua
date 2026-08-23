@@ -41,11 +41,17 @@ local function corner(parent, r)
 end
 
 local function formatAge(t)
-    local ago = os.clock() - t
-    if ago < 60 then return "now"
-    elseif ago < 3600 then return math.floor(ago / 60) .. "m"
-    elseif ago < 86400 then return math.floor(ago / 3600) .. "h"
-    else return math.floor(ago / 86400) .. "d" end
+    local ago = os.time() - t
+
+    if ago < 60 then
+        return "now"
+    elseif ago < 3600 then
+        return math.floor(ago / 60) .. "m"
+    elseif ago < 86400 then
+        return math.floor(ago / 3600) .. "h"
+    else
+        return math.floor(ago / 86400) .. "d"
+    end
 end
 
 local TYPE_ICONS = {
@@ -363,9 +369,12 @@ function NotifHistory:Bind(library, window, opts)
     end)
 
     -- hook into EZ:Notify
-    library._notifHook = function(nOpts)
-        self:_addEntry(nOpts)
-    end
+    local hook = function(nOpts)
+    self:_addEntry(nOpts)
+end
+
+self._notifHook = hook
+library._notifHook = hook
 
     return self
 end
@@ -376,7 +385,7 @@ function NotifHistory:_addEntry(opts)
         title = opts.Title or "EZ",
         content = opts.Content or "",
         type = opts.Type or "info",
-        time = os.clock(),
+        time = os.time(),
     }
 
     -- add to front (newest first)
@@ -464,11 +473,34 @@ function NotifHistory:Clear()
 end
 
 function NotifHistory:Destroy()
-    if self.Library then self.Library._notifHook = nil end
-    if self._panel then self._panel:Destroy() end
-    if self._bellBtn then self._bellBtn:Destroy() end
+    if self.Library
+        and self.Library._notifHook == self._notifHook
+    then
+        self.Library._notifHook = nil
+    end
+
+    self._notifHook = nil
+
+    if self._panel then
+        self._panel:Destroy()
+    end
+
+    if self._bellBtn then
+        self._bellBtn:Destroy()
+    end
+
+    self._panel = nil
+    self._bellBtn = nil
+    self._badge = nil
+    self._badgeLbl = nil
+    self._scroll = nil
+    self._emptyLabel = nil
+
     table.clear(self._entries)
     table.clear(self._entryFrames)
+
+    self._unreadCount = 0
+    self._isOpen = false
 end
 
 return NotifHistory
