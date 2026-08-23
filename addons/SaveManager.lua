@@ -53,25 +53,88 @@ local function serializeFlags(lib)
 end
 
 local function applyData(lib, data)
+    if type(data) ~= "table" then
+        return false, "Invalid config data"
+    end
+
     for flag, info in data do
-        -- a hand-edited or truncated file can hand back anything here
-        if type(info) == "table" then
-            local val = info.value
-            if info.type == "Color3" and type(val) == "table" then
-                val = Color3.new(val.R or 0, val.G or 0, val.B or 0)
-            elseif info.type == "EnumItem" then
-                pcall(function()
-                    local parts = tostring(val):split(".")
+        -- Ignore flags that no longer exist in the current library.
+        if type(flag) ~= "string" or lib.Flags[flag] == nil then
+            continue
+        end
+
+        if type(info) ~= "table" then
+            continue
+        end
+
+        local val = info.value
+
+        if info.type == "boolean" then
+            if type(val) ~= "boolean" then
+                continue
+            end
+
+        elseif info.type == "number" then
+            if type(val) ~= "number" then
+                continue
+            end
+
+        elseif info.type == "string" then
+            if type(val) ~= "string" then
+                continue
+            end
+
+        elseif info.type == "Color3" then
+            if type(val) ~= "table" then
+                continue
+            end
+
+            val = Color3.new(
+                tonumber(val.R) or 0,
+                tonumber(val.G) or 0,
+                tonumber(val.B) or 0
+            )
+
+        elseif info.type == "EnumItem" then
+            local valid = false
+
+            pcall(function()
+                local parts = tostring(val):split(".")
+
+                if #parts >= 3
+                    and Enum[parts[2]]
+                    and Enum[parts[2]][parts[3]]
+                then
                     val = Enum[parts[2]][parts[3]]
-                end)
+                    valid = true
+                end
+            end)
+
+            if not valid then
+                continue
             end
-            lib.Flags[flag] = val
-            local elem = lib._elements and lib._elements[flag]
-            if elem and elem.Set then
-                pcall(function() elem:Set(val) end)
+
+        elseif info.type == "table" then
+            if type(val) ~= "table" then
+                continue
             end
+
+        else
+            continue
+        end
+
+        lib.Flags[flag] = val
+
+        local elem = lib._elements and lib._elements[flag]
+
+        if elem and elem.Set then
+            pcall(function()
+                elem:Set(val)
+            end)
         end
     end
+
+    return true
 end
 
 local function b64encode(str)
