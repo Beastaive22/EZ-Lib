@@ -332,6 +332,11 @@ end
 
 function NotifHistory:Bind(library, window, opts)
     opts = opts or {}
+
+    if self._bellBtn then
+        return self
+    end
+
     self.Library = library
     self.Window = window
     self._maxEntries = opts.MaxEntries or 50
@@ -343,8 +348,8 @@ function NotifHistory:Bind(library, window, opts)
         warn("[EZ] NotificationHistory:Bind - window has no header, skipping")
         return self
     end
-    if self._bellBtn then return self end -- already bound
-    local theme = library.Theme
+    
+ local theme = library.Theme
 
     -- Shift the search bar left to make room for the bell. The library names
     -- this frame EZSearchBar; the old Velvet name never matched, so the bell
