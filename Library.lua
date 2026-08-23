@@ -1063,7 +1063,7 @@ function EZ:CreateWindow(opts)
         ZIndex = 1,
         Parent = main
     })
-    addCorner(glass, 12)
+    addCorner(glass, 14)
 
     -- top accent line (gradient-faded edges so it feels like a glow strip)
     local accentLine = create("Frame", {
@@ -1093,7 +1093,7 @@ function EZ:CreateWindow(opts)
         ZIndex = 5,
         Parent = main
     })
-    addCorner(header, 12)
+    addCorner(header, 14)
     
     -- logo dot (gently pulses so window feels "alive")
     local logoDot = create("Frame", {
