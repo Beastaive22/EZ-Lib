@@ -112,6 +112,27 @@ end
 -- Persistence
 -- ─────────────────────────────────────────────────────────────
 
+
+local function isValidTogglePin(pin)
+    local lib = QuickBar.Library
+
+    if not lib or not pin then
+        return false
+    end
+
+    if pin.type ~= "toggle" then
+        return false
+    end
+
+    if type(pin.id) ~= "string" or pin.id == "" then
+        return false
+    end
+
+    -- A QuickBar toggle must correspond to a real boolean flag
+    -- in the current version of the library.
+    return typeof(lib.Flags[pin.id]) == "boolean"
+end
+
 local function savePins()
     pcall(function()
         local saveable = {}
@@ -133,26 +154,6 @@ local function savePins()
             HttpService:JSONEncode(saveable)
         )
     end)
-end
-
-local function isValidTogglePin(pin)
-    local lib = QuickBar.Library
-
-    if not lib or not pin then
-        return false
-    end
-
-    if pin.type ~= "toggle" then
-        return false
-    end
-
-    if type(pin.id) ~= "string" or pin.id == "" then
-        return false
-    end
-
-    -- A QuickBar toggle must correspond to a real boolean flag
-    -- in the current version of the library.
-    return typeof(lib.Flags[pin.id]) == "boolean"
 end
 
 local function loadPins()
@@ -233,6 +234,25 @@ local function loadPins()
             HttpService:JSONEncode(saveable)
         )
     end)
+end
+
+
+-- cleanup
+
+local function cleanupPins()
+    local cleaned = {}
+    local seen = {}
+
+    for _, pin in QuickBar._pins do
+        if isValidTogglePin(pin) and not seen[pin.id] then
+            seen[pin.id] = true
+            table.insert(cleaned, pin)
+        end
+    end
+
+    QuickBar._pins = cleaned
+
+    savePins()
 end
 
 -- ─────────────────────────────────────────────────────────────
@@ -1079,26 +1099,6 @@ local function setupDrag(bar)
     )
 end
 
--- ─────────────────────────────────────────────────────────────
--- Cleanup
--- ─────────────────────────────────────────────────────────────
-
-
-local function cleanupPins()
-    local cleaned = {}
-    local seen = {}
-
-    for _, pin in QuickBar._pins do
-        if isValidTogglePin(pin) and not seen[pin.id] then
-            seen[pin.id] = true
-            table.insert(cleaned, pin)
-        end
-    end
-
-    QuickBar._pins = cleaned
-
-    savePins()
-end
 
 -- ─────────────────────────────────────────────────────────────
 -- Public API
