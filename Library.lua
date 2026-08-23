@@ -1094,17 +1094,7 @@ function EZ:CreateWindow(opts)
         Parent = main
     })
     addCorner(header, 12)
-    -- fix bottom corners
-    create("Frame", {
-        Size = UDim2.new(1, 0, 0, 12),
-        Position = UDim2.new(0, 0, 1, -12),
-        BackgroundColor3 = theme.Base,
-        BackgroundTransparency = 0.1,
-        BorderSizePixel = 0,
-        ZIndex = 5,
-        Parent = header
-    })
-
+    
     -- logo dot (gently pulses so window feels "alive")
     local logoDot = create("Frame", {
         Size = UDim2.new(0, 7, 0, 7),
@@ -1373,16 +1363,19 @@ function EZ:CreateWindow(opts)
 
     -- close button
     local windowCloseBtn = create("TextButton", {
-        Size = UDim2.new(0, 24, 0, 24),
-        Position = UDim2.new(1, -36, 0.5, -12),
-        BackgroundColor3 = theme.Error,
-        BackgroundTransparency = 0.6,
-        Text = "",
-        BorderSizePixel = 0,
-        ZIndex = 7,
-        AutoButtonColor = false,
-        Parent = header
-    })
+    Size = UDim2.new(0, 24, 0, 24),
+    Position = UDim2.new(1, -36, 0.5, -12),
+    BackgroundColor3 = theme.Panel,
+    BackgroundTransparency = 0.15,
+    Text = "",
+    BorderSizePixel = 0,
+    ZIndex = 7,
+    AutoButtonColor = false,
+    Parent = header
+})
+addCorner(windowCloseBtn, 8)
+addStroke(windowCloseBtn, theme.Border, 1, 0.35)
+    
     create("ImageLabel", {
         Size = UDim2.new(0, 12, 0, 12),
         Position = UDim2.new(0.5, -6, 0.5, -6),
@@ -1393,21 +1386,26 @@ function EZ:CreateWindow(opts)
         ZIndex = 8,
         Parent = windowCloseBtn,
     })
-    addCorner(windowCloseBtn, 6)
-
+    
     trackConnection(windowCloseBtn.MouseEnter, function()
-        tween(windowCloseBtn, {BackgroundTransparency = 0.2}, 0.15)
+        tween(windowCloseBtn, {
+    BackgroundColor3 = theme.Accent,
+    BackgroundTransparency = 0
+    }, 0.15)
     end)
     trackConnection(windowCloseBtn.MouseLeave, function()
-        tween(windowCloseBtn, {BackgroundTransparency = 0.6}, 0.15)
+        tween(windowCloseBtn, {
+    BackgroundColor3 = theme.Panel,
+    BackgroundTransparency = 0.15
+}, 0.15)
     end)
 
     -- minimize button
     local minBtn = create("TextButton", {
         Size = UDim2.new(0, 24, 0, 24),
         Position = UDim2.new(1, -66, 0.5, -12),
-        BackgroundColor3 = theme.Warning,
-        BackgroundTransparency = 0.6,
+        BackgroundColor3 = theme.Panel,
+        BackgroundTransparency = 0.15,
         Text = "",
         BorderSizePixel = 0,
         ZIndex = 7,
@@ -1424,13 +1422,20 @@ function EZ:CreateWindow(opts)
         ZIndex = 8,
         Parent = minBtn,
     })
-    addCorner(minBtn, 6)
+    addCorner(minBtn, 8)
+    addStroke(minBtn, theme.Border, 1, 0.35)
 
     trackConnection(minBtn.MouseEnter, function()
-        tween(minBtn, {BackgroundTransparency = 0.2}, 0.15)
+        tween(minBtn, {
+    BackgroundColor3 = theme.Accent,
+    BackgroundTransparency = 0
+}, 0.15)
     end)
     trackConnection(minBtn.MouseLeave, function()
-        tween(minBtn, {BackgroundTransparency = 0.6}, 0.15)
+        tween(minBtn, {
+    BackgroundColor3 = theme.Panel,
+    BackgroundTransparency = 0.15
+}, 0.15)
     end)
 
     -- tab sidebar
@@ -1438,14 +1443,17 @@ function EZ:CreateWindow(opts)
         Name = "Sidebar",
         Size = UDim2.new(0, tabW, 1, -48),
         Position = UDim2.new(0, 0, 0, 48),
-        BackgroundColor3 = theme.Base,
-        BackgroundTransparency = 0.3,
+        BackgroundColor3 = theme.Panel,
+        BackgroundTransparency = 0.15,
         BorderSizePixel = 0,
         ZIndex = 4,
         ClipsDescendants = true,
         Parent = main
     })
-
+   
+        addCorner(collapseBtn, 8)
+        addStroke(collapseBtn, theme.Border, 1, 0.35)
+    
     -- sidebar separator
     create("Frame", {
         Size = UDim2.new(0, 1, 1, -12),
