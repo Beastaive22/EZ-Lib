@@ -115,9 +115,12 @@ end
 local function savePins()
     pcall(function()
         local saveable = {}
+        local seen = {}
 
         for _, p in QuickBar._pins do
-            if p.type == "toggle" then
+            if isValidTogglePin(p) and not seen[p.id] then
+                seen[p.id] = true
+
                 table.insert(saveable, {
                     id = p.id,
                     icon = p.icon,
@@ -132,38 +135,103 @@ local function savePins()
     end)
 end
 
+local function isValidTogglePin(pin)
+    local lib = QuickBar.Library
+
+    if not lib or not pin then
+        return false
+    end
+
+    if pin.type ~= "toggle" then
+        return false
+    end
+
+    if type(pin.id) ~= "string" or pin.id == "" then
+        return false
+    end
+
+    -- A QuickBar toggle must correspond to a real boolean flag
+    -- in the current version of the library.
+    return typeof(lib.Flags[pin.id]) == "boolean"
+end
+
 local function loadPins()
     pcall(function()
+        QuickBar._pins = {}
+
         if not isfile(QuickBar._file) then
             return
         end
 
         local raw = readfile(QuickBar._file)
+
+        if type(raw) ~= "string" or raw == "" then
+            return
+        end
+
         local data = HttpService:JSONDecode(raw)
 
         if type(data) ~= "table" then
             return
         end
 
-        local out = {}
+        local seen = {}
+        local cleaned = {}
 
         for _, e in data do
+            local id
+            local icon
+
             if type(e) == "string" then
-                table.insert(out, {
+                id = e
+            elseif type(e) == "table" then
+                id = e.id
+                icon = e.icon
+            end
+
+            local pin = {
+                type = "toggle",
+                id = id,
+                icon = icon,
+            }
+
+            -- Remove:
+            --   • deleted features
+            --   • renamed features
+            --   • invalid entries
+            --   • duplicate pins
+            if isValidTogglePin(pin) and not seen[id] then
+                seen[id] = true
+
+                table.insert(cleaned, {
                     type = "toggle",
-                    id = e,
+                    id = id,
+                    icon = icon,
                 })
 
-            elseif type(e) == "table" and e.id then
-                table.insert(out, {
-                    type = "toggle",
-                    id = e.id,
-                    icon = e.icon,
-                })
+                if #cleaned >= QuickBar._maxPins then
+                    break
+                end
             end
         end
 
-        QuickBar._pins = out
+        QuickBar._pins = cleaned
+
+        -- Rewrite the file with only valid pins.
+        -- This permanently removes stale entries such as old ESP/TP/etc.
+        local saveable = {}
+
+        for _, pin in cleaned do
+            table.insert(saveable, {
+                id = pin.id,
+                icon = pin.icon,
+            })
+        end
+
+        writefile(
+            QuickBar._file,
+            HttpService:JSONEncode(saveable)
+        )
     end)
 end
 
@@ -585,6 +653,8 @@ local function rebuildBar()
         return
     end
 
+    cleanupPins()
+    
     local theme = lib.Theme
     local mobile = isMobile()
 
@@ -1010,6 +1080,27 @@ local function setupDrag(bar)
 end
 
 -- ─────────────────────────────────────────────────────────────
+-- Cleanup
+-- ─────────────────────────────────────────────────────────────
+
+
+local function cleanupPins()
+    local cleaned = {}
+    local seen = {}
+
+    for _, pin in QuickBar._pins do
+        if isValidTogglePin(pin) and not seen[pin.id] then
+            seen[pin.id] = true
+            table.insert(cleaned, pin)
+        end
+    end
+
+    QuickBar._pins = cleaned
+
+    savePins()
+end
+
+-- ─────────────────────────────────────────────────────────────
 -- Public API
 -- ─────────────────────────────────────────────────────────────
 
@@ -1343,7 +1434,18 @@ function QuickBar:Pin(id, opts)
         return
     end
 
+    if type(id) ~= "string" or id == "" then
+        return
+    end
+
     if findPinIdx(id) then
+        return
+    end
+
+    if not isValidTogglePin({
+        type = "toggle",
+        id = id,
+    }) then
         return
     end
 
@@ -1351,22 +1453,13 @@ function QuickBar:Pin(id, opts)
         return
     end
 
-    if typeof(self.Library.Flags[id])
-        ~= "boolean"
-    then
-        return
-    end
-
     opts = opts or {}
 
-    table.insert(
-        self._pins,
-        {
-            type = "toggle",
-            id = id,
-            icon = opts.Icon,
-        }
-    )
+    table.insert(self._pins, {
+        type = "toggle",
+        id = id,
+        icon = opts.Icon,
+    })
 
     savePins()
     rebuildBar()
